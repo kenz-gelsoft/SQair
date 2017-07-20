@@ -1,6 +1,10 @@
+#app input {
+    float: right;
+}
 #film {
     display: block;
     border: 1px solid black;
+    margin: auto;
     width: 72mm;
     height: 86mm;
 }
