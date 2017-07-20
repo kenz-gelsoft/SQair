@@ -8,20 +8,32 @@ window.addEventListener('load', function (e) {
 
     var app = document.getElementById('app');
     app.addEventListener('submit', function (e) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', 'http://flashair/upload.cgi', true);
-        var formData = new FormData();
-        formData.append('file', chooser.files[0]);
-        xhr.send(formData);
-        // writeProtect(function () {
-        // });
+        writeProtect(function () {
+            upload(chooser.files[0], function () {
+                alert('送信成功！');
+            }, function () {
+                alert('アップロードに失敗しました。');
+            });            
+        }, function () {
+            alert('ライトプロテクトの設定に失敗しました。');
+        });
         e.preventDefault();
     }, false);
 }, false);
 
-// function writeProtect(aCallback) {
-//     var xhr = new XMLHttpRequest();
-//     xhr.open('GET', 'http://flashair/upload.cgi?WRITEPROTECT=ON', true);
-//     xhr.onload = aCallback;
-//     xhr.send();
-// }
+function upload(aFile, aOnLoad, aOnError) {
+    var xhr = new XMLHttpRequest();
+    xhr.onload = aOnLoad;
+    xhr.onerror = aOnError;
+    xhr.open('POST', 'http://flashair/upload.cgi', true);
+    var formData = new FormData();
+    formData.append('file', aFile);
+    xhr.send(formData);
+}
+function writeProtect(aOnLoad, aOnError) {
+    var xhr = new XMLHttpRequest();
+    xhr.onload = aOnLoad;
+    xhr.onerror = aOnError;
+    xhr.open('GET', 'http://flashair/upload.cgi?WRITEPROTECT=ON', true);
+    xhr.send();
+}
