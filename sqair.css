@@ -1,0 +1,23 @@
+#film {
+    display: block;
+    border: 1px solid black;
+    width: 72mm;
+    height: 86mm;
+}
+#preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: black;
+    background-position: center;
+    background-size: cover;
+    color: white;
+    margin: 5mm;
+    width: 62mm;
+    height: 62mm;
+}
+#chooser {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
