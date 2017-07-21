@@ -8,32 +8,37 @@ window.addEventListener('load', function (e) {
 
     var app = document.getElementById('app');
     app.addEventListener('submit', function (e) {
-        writeProtect(function () {
-            upload(chooser.files[0], function () {
-                alert('送信成功！');
-            }, function () {
-                alert('アップロードに失敗しました。');
-            });            
-        }, function () {
-            alert('ライトプロテクトの設定に失敗しました。');
+        writeProtect(function (xhr) {
+            xhr.onload = function () {
+                // FIXME: too deep callstack
+                upload(chooser.files[0], function (xhr) {
+                    xhr.onload = function () {
+                        alert('送信成功！');
+                    };
+                    xhr.onerror = function () {
+                        alert('アップロードに失敗しました。');
+                    };
+                });
+            };
+            xhr.onerror = function () {
+                alert('ライトプロテクトの設定に失敗しました。');
+            };
         });
         e.preventDefault();
     }, false);
 }, false);
 
-function upload(aFile, aOnLoad, aOnError) {
+function upload(aFile, aSetupListeners) {
     var xhr = new XMLHttpRequest();
-    xhr.onload = aOnLoad;
-    xhr.onerror = aOnError;
     xhr.open('POST', 'http://flashair/upload.cgi', true);
+    aSetupListeners(xhr);
     var formData = new FormData();
     formData.append('file', aFile);
     xhr.send(formData);
 }
-function writeProtect(aOnLoad, aOnError) {
+function writeProtect(aSetupListeners) {
     var xhr = new XMLHttpRequest();
-    xhr.onload = aOnLoad;
-    xhr.onerror = aOnError;
     xhr.open('GET', 'http://flashair/upload.cgi?WRITEPROTECT=ON', true);
+    aSetupListeners(xhr);
     xhr.send();
 }
