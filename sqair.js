@@ -1,11 +1,11 @@
 window.addEventListener('load', function (e) {
-    var animate = document.getElementById('animate');
-    animate.addEventListener('click', function () {
-        animateUploading();
-        setTimeout(function () {
-            animateUploaded(true);
-        }, 1000);
-    }, false);
+    // var animate = document.getElementById('animate');
+    // animate.addEventListener('click', function () {
+    //     animateUploading();
+    //     setTimeout(function () {
+    //         animateUploaded(true);
+    //     }, 1000);
+    // }, false);
 
     var chooser = document.getElementById('chooser');
     chooser.addEventListener('change', function (e) {
