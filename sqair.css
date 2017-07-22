@@ -1,12 +1,34 @@
-#submit {
+#submit, #animate {
     float: right;
 }
-#film {
+#film, #film-back {
+    position: relative;
+    top: 0px;
+    left: 0px;
+
+    background-color: white;
     display: block;
     border: 1px solid black;
     margin: auto;
+
+    transition-property: top, left, opacity;
+    transition-duration: 0.5s;
+    transition-timing-function: ease;    
+}
+#film {
     width: 72mm;
     height: 86mm;
+}
+#hidden {
+    position: absolute;
+    left: 0;
+    top: -30mm; 
+    width: 100%;
+}
+#film-back {
+    transition-duration: 1s;
+    width: 24mm;
+    height: 29mm;
 }
 #preview {
     display: flex;

@@ -1,4 +1,9 @@
 window.addEventListener('load', function (e) {
+    var animate = document.getElementById('animate');
+    animate.addEventListener('click', function () {
+        animateUpload();
+    }, false);
+
     var chooser = document.getElementById('chooser');
     chooser.addEventListener('change', function (e) {
         var preview = document.getElementById('preview');
@@ -27,6 +32,41 @@ window.addEventListener('load', function (e) {
         e.preventDefault();
     }, false);
 }, false);
+
+function animateUpload() {
+    var film = document.getElementById('film');
+    var r = film.getBoundingClientRect();
+    var center = r.top + r.height / 2;
+    var dy = center + r.height / 2;
+    film.style.top  = -dy + 'px';
+
+    setTimeout(function () {
+        var filmBack = document.getElementById('film-back');
+        var r2 = filmBack.getBoundingClientRect();
+        filmBack.style.top = (center + r2.height / 2) + 'px';
+
+        setTimeout(function () {
+            resetState(film);
+            resetState(filmBack);
+        }, transitionDuration(filmBack));
+    }, 1 * 1000);
+}
+function resetState(aLayer) {
+    aLayer.style.opacity = 0;
+    var duration = transitionDuration(aLayer);
+    setTimeout(function () {
+        aLayer.style.display = 'none';
+        aLayer.style.top = 0;
+        aLayer.style.display = 'block';
+        setTimeout(function () {
+            aLayer.style.opacity = 1;
+        }, duration);
+    }, duration);
+}
+function transitionDuration(aElt) {
+    var style = getComputedStyle(aElt);
+    return 1000 * parseFloat(style.transitionDuration);
+}
 
 function upload(aFile, aSetupListeners) {
     var xhr = new XMLHttpRequest();
