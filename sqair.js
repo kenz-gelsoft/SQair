@@ -1,7 +1,10 @@
 window.addEventListener('load', function (e) {
     var animate = document.getElementById('animate');
     animate.addEventListener('click', function () {
-        animateUpload();
+        animateUploading();
+        setTimeout(function () {
+            animateUploaded(true);
+        }, 1000);
     }, false);
 
     var chooser = document.getElementById('chooser');
@@ -13,44 +16,80 @@ window.addEventListener('load', function (e) {
 
     var app = document.getElementById('app');
     app.addEventListener('submit', function (e) {
+        uploading = true;
+        animateUploading();
         writeProtect(function (xhr) {
             xhr.onload = function () {
                 // FIXME: too deep callstack
                 upload(chooser.files[0], function (xhr) {
                     xhr.onload = function () {
-                        alert('送信成功！');
+                        uploading = false;
+                        animateUploaded(true);
                     };
                     xhr.onerror = function () {
                         alert('アップロードに失敗しました。');
+                        uploading = false;
+                        animateUploaded(false);
                     };
                 });
             };
             xhr.onerror = function () {
                 alert('ライトプロテクトの設定に失敗しました。');
+                uploading = false;
+                animateUploaded(false);
             };
         });
         e.preventDefault();
     }, false);
 }, false);
 
-function animateUpload() {
+var uploading = false;
+var animating = false;
+function animateUploading() {
+    if (animating) {
+        return;
+    }
+    animating = true;
+
     var film = document.getElementById('film');
     var r = film.getBoundingClientRect();
-    var center = r.top + r.height / 2;
-    var dy = center + r.height / 2;
+    var dy = getCenterY() + r.height / 2;
     film.style.top  = -dy + 'px';
 
     setTimeout(function () {
-        var filmBack = document.getElementById('film-back');
-        var r2 = filmBack.getBoundingClientRect();
-        filmBack.style.top = (center + r2.height / 2) + 'px';
-
-        setTimeout(function () {
-            resetState(film);
-            resetState(filmBack);
-        }, transitionDuration(filmBack));
+        animating = false;
+        if (!uploading) {
+            animateUploaded(true);
+        }
     }, 1 * 1000);
 }
+var center = 0;
+function getCenterY() {
+    if (center == 0) {
+        var film = document.getElementById('film');
+        var r = film.getBoundingClientRect();
+        center = r.top + r.height / 2;
+    }
+    return center;
+}
+
+function animateUploaded(aSucceeded) {
+    if (animating) {
+        return;
+    }
+
+    var filmBack = document.getElementById('film-back');
+    if (aSucceeded) {
+        var r = filmBack.getBoundingClientRect();
+        filmBack.style.top = (getCenterY() + r.height / 2) + 'px';
+    }
+
+    var film = document.getElementById('film');
+    setTimeout(function () {
+        [film, filmBack].forEach(resetState);
+    }, transitionDuration(filmBack));
+}
+
 function resetState(aLayer) {
     aLayer.style.opacity = 0;
     var duration = transitionDuration(aLayer);
@@ -63,6 +102,7 @@ function resetState(aLayer) {
         }, duration);
     }, duration);
 }
+
 function transitionDuration(aElt) {
     var style = getComputedStyle(aElt);
     return 1000 * parseFloat(style.transitionDuration);
