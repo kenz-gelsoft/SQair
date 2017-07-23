@@ -113,7 +113,7 @@ function upload(aFile, aSetupListeners) {
     xhr.open('POST', 'http://flashair/upload.cgi', true);
     aSetupListeners(xhr);
     var formData = new FormData();
-    formData.append('file', aFile);
+    formData.append('file', aFile, fileNameAt(new Date()));
     xhr.send(formData);
 }
 function writeProtect(aSetupListeners) {
@@ -121,4 +121,24 @@ function writeProtect(aSetupListeners) {
     xhr.open('GET', 'http://flashair/upload.cgi?WRITEPROTECT=ON', true);
     aSetupListeners(xhr);
     xhr.send();
+}
+
+function fileNameAt(aDate) {
+    var sec = Math.floor(aDate.getTime() / 1000);
+    var upper = Math.floor(sec / 10000);
+    var lower = sec % 10000;
+
+    var digits = 'ABCDEFGHIJKLMNOPQRSTUVWX';
+    var radix = digits.length;
+    var code = '';
+    while (upper >= radix) {
+        var c = upper % radix;
+        code += digits[c];
+        upper = Math.floor(upper / radix);
+    }
+    code += digits[c];
+
+    code = ('AAAA' + code).slice(-4);
+    lower = ('0000' + lower).slice(-4);
+    return code + lower + '.JPG';
 }
