@@ -20,14 +20,24 @@ window.addEventListener('load', function (e) {
         animateUploading();
         writeProtect(function (xhr) {
             xhr.onload = function () {
-                // FIXME: too deep callstack
-                upload(chooser.files[0], function (xhr) {
+                var file = chooser.files[0];
+                setFileTime(file.lastModifiedDate, function (xhr) {
                     xhr.onload = function () {
-                        uploading = false;
-                        animateUploaded(true);
+                        // FIXME: too deep callstack
+                        upload(file, function (xhr) {
+                            xhr.onload = function () {
+                                uploading = false;
+                                animateUploaded(true);
+                            };
+                            xhr.onerror = function () {
+                                alert('アップロードに失敗しました。');
+                                uploading = false;
+                                animateUploaded(false);
+                            };
+                        });
                     };
                     xhr.onerror = function () {
-                        alert('アップロードに失敗しました。');
+                        alert('システム時刻の設定に失敗しました。');
                         uploading = false;
                         animateUploaded(false);
                     };
@@ -120,6 +130,34 @@ function writeProtect(aSetupListeners) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'http://flashair/upload.cgi?WRITEPROTECT=ON', true);
     aSetupListeners(xhr);
+    xhr.send();
+}
+function setFileTime(aDate, aSetupListeners) {
+    var xhr = new XMLHttpRequest();
+    if (!aDate) {
+        aDate = new Date();
+    }
+    // DATE
+    // bit 15 ～ 9      年 (1980年をゼロ年とする)
+    // bit  8 ～ 5      月 (1 ～ 12)
+    // bit  4 ～ 0      日 (1 ～ 31)    
+    var fatYear = aDate.getFullYear() - 1980;
+    var fatMonth = aDate.getMonth() + 1;
+    var fatDay = aDate.getDate();
+    var hiWord = (fatYear << 9)
+        | (fatMonth << 5)
+        | fatDay;
+    // TIME
+    // bit 15 ～ 11       時
+    // bit 10 ～  5       分
+    // bit  4 ～  0       秒÷２
+    var fatSeconds = Math.ceil(aDate.getSeconds() / 2);
+    var loWord = (aDate.getHours() << 11)
+        | (aDate.getMinutes() << 5)
+        | fatSeconds;
+    var ftime  = ((hiWord << 16) | loWord) & 0xFFFFFFFF;
+    aSetupListeners(xhr);
+    xhr.open('GET', 'http://flashair/upload.cgi?FTIME=0x' + ftime.toString(16).toUpperCase(), true);
     xhr.send();
 }
 
