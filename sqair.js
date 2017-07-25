@@ -119,12 +119,23 @@ function transitionDuration(aElt) {
 }
 
 function upload(aFile, aSetupListeners) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'http://flashair/upload.cgi', true);
-    aSetupListeners(xhr);
-    var formData = new FormData();
-    formData.append('file', aFile, fileNameAt(new Date()));
-    xhr.send(formData);
+    var reader = new FileReader();
+    reader.onload = function (aEvent) {
+        var buffer = reader.result;
+        Jimp.read(buffer, function (aError, aImage) {
+            // aImage.exifRotate();
+            aImage.cover(1920, 1920).getBuffer(Jimp.MIME_JPEG, function (aError, aBuffer) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', 'http://flashair/upload.cgi', true);
+                aSetupListeners(xhr);
+                var formData = new FormData();
+                var blob = new Blob(aBuffer, {type: 'image/jpeg'});
+                formData.append('file', blob, fileNameAt(new Date()));
+                xhr.send(formData);
+            });
+        });
+    };
+    reader.readAsArrayBuffer(aFile);
 }
 function writeProtect(aSetupListeners) {
     var xhr = new XMLHttpRequest();
