@@ -18,40 +18,47 @@ window.addEventListener('load', function (e) {
     app.addEventListener('submit', function (e) {
         uploading = true;
         animateUploading();
-        writeProtect(function (xhr) {
-            xhr.onload = function () {
-                var file = chooser.files[0];
-                setFileTime(file.lastModifiedDate, function (xhr) {
-                    xhr.onload = function () {
-                        // FIXME: too deep callstack
-                        upload(file, function (xhr) {
-                            xhr.onload = function () {
-                                uploading = false;
-                                animateUploaded(true);
-                            };
-                            xhr.onerror = function () {
-                                alert('アップロードに失敗しました。');
-                                uploading = false;
-                                animateUploaded(false);
-                            };
-                        });
-                    };
-                    xhr.onerror = function () {
-                        alert('システム時刻の設定に失敗しました。');
-                        uploading = false;
-                        animateUploaded(false);
-                    };
-                });
-            };
-            xhr.onerror = function () {
-                alert('ライトプロテクトの設定に失敗しました。');
-                uploading = false;
-                animateUploaded(false);
-            };
+
+        var file = chooser.files[0];
+        resizeIfTooLarge(file, function (aResized) {
+            upload(aResized);
         });
         e.preventDefault();
     }, false);
 }, false);
+
+function upload(aBlob) {
+    writeProtect(function (xhr) {
+        xhr.onload = function () {
+            var date = new Date();
+            setFileTime(date, function (xhr) {
+                xhr.onload = function () {
+                    uploadBlob(aBlob, date, function (xhr) {
+                        xhr.onload = function () {
+                            uploading = false;
+                            animateUploaded(true);
+                        };
+                        xhr.onerror = function () {
+                            alert('アップロードに失敗しました。');
+                            uploading = false;
+                            animateUploaded(false);
+                        };
+                    });
+                };
+                xhr.onerror = function () {
+                    alert('システム時刻の設定に失敗しました。');
+                    uploading = false;
+                    animateUploaded(false);
+                };
+            });
+        };
+        xhr.onerror = function () {
+            alert('ライトプロテクトの設定に失敗しました。');
+            uploading = false;
+            animateUploaded(false);
+        };
+    });
+}
 
 var uploading = false;
 var animating = false;
@@ -118,12 +125,12 @@ function transitionDuration(aElt) {
     return 1000 * parseFloat(style.transitionDuration);
 }
 
-function upload(aFile, aSetupListeners) {
+function uploadBlob(aBlob, aDate, aSetupListeners) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', 'http://flashair/upload.cgi', true);
     aSetupListeners(xhr);
     var formData = new FormData();
-    formData.append('file', aFile, fileNameAt(new Date()));
+    formData.append('file', aBlob, fileNameAt(aDate));
     xhr.send(formData);
 }
 function writeProtect(aSetupListeners) {
@@ -179,4 +186,64 @@ function fileNameAt(aDate) {
     code = ('AAAA' + code).slice(-4);
     lower = ('0000' + lower).slice(-4);
     return code + lower + '.JPG';
+}
+
+var IMAGE_SIZE = 1920;
+function resizeIfTooLarge(aFile, aCallback) {
+    loadImage(aFile, function (aImage) {
+        var w = aImage.naturalWidth;
+        var h = aImage.naturalHeight;
+        // if (w <= IMAGE_SIZE ||
+        //     h <= IMAGE_SIZE) {
+        //     // 十分小さければ縮小しない
+        //     aCallback(aFile);
+        //     return;
+        // }
+        resizeImage(aImage, aCallback);
+    });
+}
+
+function loadImage(aFile, aCallback) {
+    var img = new Image();
+    img.onload = function () {
+        aCallback(img);
+    };
+    img.src = URL.createObjectURL(aFile);
+}
+
+function resizeImage(aImage, aCallback) {
+    var x = 0;
+    var y = 0;
+    var w = aImage.naturalWidth;
+    var h = aImage.naturalHeight;
+    if (w > h) {
+        // height を基準に計算する
+        var ratio = IMAGE_SIZE / h;
+        w *= ratio;
+        h = IMAGE_SIZE;
+        x = (IMAGE_SIZE - w) / 2;
+    } else {
+        // width を基準に計算する
+        var ratio = IMAGE_SIZE / w;
+        w = IMAGE_SIZE;
+        h *= ratio;
+        y = (IMAGE_SIZE - h) / 2;
+    }
+    var canvas = document.createElement('canvas');
+    canvas.width  = IMAGE_SIZE;
+    canvas.height = IMAGE_SIZE;
+    var g = canvas.getContext('2d');
+    g.drawImage(aImage, x, y, w, h);
+
+    canvasToBlob(canvas, aCallback, 'image/jpeg');
+}
+
+function canvasToBlob(aCanvas, aCallback, aMimeType) {
+    var dataUrl = aCanvas.toDataURL(aMimeType);
+    var bin = atob(dataUrl.split(',')[1]);
+    var array = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; ++i) {
+        array[i] = bin.charCodeAt(i);
+    }
+    aCallback(new Blob([array], {type: aMimeType}));
 }
