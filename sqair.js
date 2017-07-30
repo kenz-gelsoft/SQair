@@ -49,12 +49,13 @@ Preview.prototype = {
 };
 
 function upload(aBlob, aCallback) {
-    writeProtect(function (xhr) {
+    var flashAir = new FlashAir();
+    flashAir.writeProtect(function (xhr) {
         xhr.onload = function () {
             var date = new Date();
-            setFileTime(date, function (xhr) {
+            flashAir.setFileTime(date, function (xhr) {
                 xhr.onload = function () {
-                    uploadBlob(aBlob, date, function (xhr) {
+                    flashAir.upload(aBlob, fileNameAt(date), function (xhr) {
                         xhr.onload = function () {
                             aCallback();
                         };
@@ -125,48 +126,55 @@ function transitionDuration(aElt) {
     return 1000 * parseFloat(style.transitionDuration);
 }
 
-function uploadBlob(aBlob, aDate, aSetupListeners) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'http://flashair/upload.cgi', true);
-    aSetupListeners(xhr);
-    var formData = new FormData();
-    formData.append('file', aBlob, fileNameAt(aDate));
-    xhr.send(formData);
+function FlashAir() {
 }
-function writeProtect(aSetupListeners) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'http://flashair/upload.cgi?WRITEPROTECT=ON', true);
-    aSetupListeners(xhr);
-    xhr.send();
-}
-function setFileTime(aDate, aSetupListeners) {
-    var xhr = new XMLHttpRequest();
-    if (!aDate) {
-        aDate = new Date();
-    }
-    // DATE
-    // bit 15 ～ 9      年 (1980年をゼロ年とする)
-    // bit  8 ～ 5      月 (1 ～ 12)
-    // bit  4 ～ 0      日 (1 ～ 31)    
-    var fatYear = aDate.getFullYear() - 1980;
-    var fatMonth = aDate.getMonth() + 1;
-    var fatDay = aDate.getDate();
-    var hiWord = (fatYear << 9)
-        | (fatMonth << 5)
-        | fatDay;
-    // TIME
-    // bit 15 ～ 11       時
-    // bit 10 ～  5       分
-    // bit  4 ～  0       秒÷２
-    var fatSeconds = Math.ceil(aDate.getSeconds() / 2);
-    var loWord = (aDate.getHours() << 11)
-        | (aDate.getMinutes() << 5)
-        | fatSeconds;
-    var ftime  = ((hiWord << 16) | loWord) & 0xFFFFFFFF;
-    aSetupListeners(xhr);
-    xhr.open('GET', 'http://flashair/upload.cgi?FTIME=0x' + ftime.toString(16).toUpperCase(), true);
-    xhr.send();
-}
+FlashAir.prototype = {
+    upload: function (aBlob, aFileName, aSetupListeners) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'http://flashair/upload.cgi', true);
+        aSetupListeners(xhr);
+        var formData = new FormData();
+        formData.append('file', aBlob, aFileName);
+        xhr.send(formData);
+    },
+    writeProtect: function (aSetupListeners) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'http://flashair/upload.cgi?WRITEPROTECT=ON', true);
+        aSetupListeners(xhr);
+        xhr.send();
+    },
+    fat32DateTime: function (aDate) {
+        // DATE
+        // bit 15 ～ 9      年 (1980年をゼロ年とする)
+        // bit  8 ～ 5      月 (1 ～ 12)
+        // bit  4 ～ 0      日 (1 ～ 31)    
+        var fatYear = aDate.getFullYear() - 1980;
+        var fatMonth = aDate.getMonth() + 1;
+        var fatDay = aDate.getDate();
+        var hiWord = (fatYear << 9)
+            | (fatMonth << 5)
+            | fatDay;
+        // TIME
+        // bit 15 ～ 11       時
+        // bit 10 ～  5       分
+        // bit  4 ～  0       秒÷２
+        var fatSeconds = Math.ceil(aDate.getSeconds() / 2);
+        var loWord = (aDate.getHours() << 11)
+            | (aDate.getMinutes() << 5)
+            | fatSeconds;
+        var ftime  = ((hiWord << 16) | loWord) & 0xFFFFFFFF;
+        return '0x' + ftime.toString(16).toUpperCase();
+    },
+    setFileTime: function (aDate, aSetupListeners) {
+        var xhr = new XMLHttpRequest();
+        if (!aDate) {
+            aDate = new Date();
+        }
+        aSetupListeners(xhr);
+        xhr.open('GET', 'http://flashair/upload.cgi?FTIME=' + this.fat32DateTime(aDate), true);
+        xhr.send();
+    },
+};
 
 function fileNameAt(aDate) {
     var sec = Math.floor(aDate.getTime() / 1000);
