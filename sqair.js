@@ -8,10 +8,9 @@ window.addEventListener('load', function (e) {
     // }, false);
 
     var chooser = document.getElementById('chooser');
+    var preview = new Preview('preview');
     chooser.addEventListener('change', function (e) {
-        var preview = document.getElementById('preview');
-        var dataUrl = URL.createObjectURL(chooser.files[0]);
-        preview.style.backgroundImage = 'url(' + dataUrl + ')';
+        preview.set(chooser.files[0]);
     }, false);
 
     var app = document.getElementById('app');
@@ -23,6 +22,7 @@ window.addEventListener('load', function (e) {
                     if (aError) {
                         alert(aError);
                     }
+                    preview.reset();
                     animateUploaded(!aError);
                 });
             });
@@ -30,6 +30,23 @@ window.addEventListener('load', function (e) {
         e.preventDefault();
     }, false);
 }, false);
+
+function Preview(aId) {
+    this._elt = document.getElementById(aId);
+}
+Preview.prototype = {
+    set: function (aFile) {
+        this._objUrl = URL.createObjectURL(aFile);
+        this._elt.style.backgroundImage = 'url(' + this._objUrl + ')';
+    },
+    reset: function () {
+        if (!this._objUrl) {
+            return;
+        }
+        this._elt.style.backgroundImage = null;
+        URL.revokeObjectURL(this._objUrl);
+    },
+};
 
 function upload(aBlob, aCallback) {
     writeProtect(function (xhr) {
