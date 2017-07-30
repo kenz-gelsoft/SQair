@@ -50,28 +50,19 @@ Preview.prototype = {
 
 function upload(aBlob, aCallback) {
     var flashAir = new FlashAir();
-    flashAir.writeProtect(function (xhr) {
-        xhr.onload = function () {
-            var date = new Date();
-            flashAir.setFileTime(date, function (xhr) {
-                xhr.onload = function () {
-                    flashAir.upload(aBlob, fileNameAt(date), function (xhr) {
-                        xhr.onload = function () {
-                            aCallback();
-                        };
-                        xhr.onerror = function () {
-                            aCallback('アップロードに失敗しました。');
-                        };
-                    });
-                };
-                xhr.onerror = function () {
-                    aCallback('システム時刻の設定に失敗しました。');
-                };
+    flashAir.writeProtect(function () {
+        var date = new Date();
+        flashAir.setFileTime(date, function () {
+            flashAir.upload(aBlob, fileNameAt(date), function () {
+                aCallback();
+            }, function () {
+                aCallback('アップロードに失敗しました。');
             });
-        };
-        xhr.onerror = function () {
-            aCallback('ライトプロテクトの設定に失敗しました。');
-        };
+        }, function () {
+            aCallback('システム時刻の設定に失敗しました。');
+        });
+    }, function () {
+        aCallback('ライトプロテクトの設定に失敗しました。');
     });
 }
 
@@ -129,18 +120,20 @@ function transitionDuration(aElt) {
 function FlashAir() {
 }
 FlashAir.prototype = {
-    upload: function (aBlob, aFileName, aSetupListeners) {
+    upload: function (aBlob, aFileName, aOnSuccess, aOnError) {
         var xhr = new XMLHttpRequest();
         xhr.open('POST', 'http://flashair/upload.cgi', true);
-        aSetupListeners(xhr);
+        xhr.onload  = aOnSuccess;
+        xhr.onerror = aOnError;
         var formData = new FormData();
         formData.append('file', aBlob, aFileName);
         xhr.send(formData);
     },
-    writeProtect: function (aSetupListeners) {
+    writeProtect: function (aOnSuccess, aOnError) {
         var xhr = new XMLHttpRequest();
         xhr.open('GET', 'http://flashair/upload.cgi?WRITEPROTECT=ON', true);
-        aSetupListeners(xhr);
+        xhr.onload  = aOnSuccess;
+        xhr.onerror = aOnError;
         xhr.send();
     },
     fat32DateTime: function (aDate) {
@@ -165,13 +158,14 @@ FlashAir.prototype = {
         var ftime  = ((hiWord << 16) | loWord) & 0xFFFFFFFF;
         return '0x' + ftime.toString(16).toUpperCase();
     },
-    setFileTime: function (aDate, aSetupListeners) {
+    setFileTime: function (aDate, aOnSuccess, aOnError) {
         var xhr = new XMLHttpRequest();
         if (!aDate) {
             aDate = new Date();
         }
-        aSetupListeners(xhr);
         xhr.open('GET', 'http://flashair/upload.cgi?FTIME=' + this.fat32DateTime(aDate), true);
+        xhr.onload  = aOnSuccess;
+        xhr.onerror = aOnError;
         xhr.send();
     },
 };
