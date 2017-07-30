@@ -16,18 +16,22 @@ window.addEventListener('load', function (e) {
 
     var app = document.getElementById('app');
     app.addEventListener('submit', function (e) {
-        uploading = true;
-        animateUploading();
-
-        var file = chooser.files[0];
-        resizeIfTooLarge(file, function (aResized) {
-            upload(aResized);
+        animateUploading(function () {
+            var file = chooser.files[0];
+            resizeIfTooLarge(file, function (aResized) {
+                upload(aResized, function (aError) {
+                    if (aError) {
+                        alert(aError);
+                    }
+                    animateUploaded(!aError);
+                });
+            });
         });
         e.preventDefault();
     }, false);
 }, false);
 
-function upload(aBlob) {
+function upload(aBlob, aCallback) {
     writeProtect(function (xhr) {
         xhr.onload = function () {
             var date = new Date();
@@ -35,49 +39,32 @@ function upload(aBlob) {
                 xhr.onload = function () {
                     uploadBlob(aBlob, date, function (xhr) {
                         xhr.onload = function () {
-                            uploading = false;
-                            animateUploaded(true);
+                            aCallback();
                         };
                         xhr.onerror = function () {
-                            alert('アップロードに失敗しました。');
-                            uploading = false;
-                            animateUploaded(false);
+                            aCallback('アップロードに失敗しました。');
                         };
                     });
                 };
                 xhr.onerror = function () {
-                    alert('システム時刻の設定に失敗しました。');
-                    uploading = false;
-                    animateUploaded(false);
+                    aCallback('システム時刻の設定に失敗しました。');
                 };
             });
         };
         xhr.onerror = function () {
-            alert('ライトプロテクトの設定に失敗しました。');
-            uploading = false;
-            animateUploaded(false);
+            aCallback('ライトプロテクトの設定に失敗しました。');
         };
     });
 }
 
-var uploading = false;
-var animating = false;
-function animateUploading() {
-    if (animating) {
-        return;
-    }
-    animating = true;
-
+function animateUploading(aCallback) {
     var film = document.getElementById('film');
     var r = film.getBoundingClientRect();
     var dy = getCenterY() + r.height / 2;
     film.style.top  = -dy + 'px';
 
     setTimeout(function () {
-        animating = false;
-        if (!uploading) {
-            animateUploaded(true);
-        }
+        aCallback();
     }, 1 * 1000);
 }
 var center = 0;
@@ -91,10 +78,6 @@ function getCenterY() {
 }
 
 function animateUploaded(aSucceeded) {
-    if (animating) {
-        return;
-    }
-
     var filmBack = document.getElementById('film-back');
     if (aSucceeded) {
         var r = filmBack.getBoundingClientRect();
