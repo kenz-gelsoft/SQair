@@ -80,6 +80,9 @@ function animateUploaded(aSucceeded) {
     var film = document.getElementById('film');
     setTimeout(function () {
         [film, filmBack].forEach(resetState);
+
+        var help = document.getElementById('help');
+        help.style.opacity = 1;
     }, transitionDuration(filmBack));
 }
 

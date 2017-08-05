@@ -47,3 +47,19 @@
     width: 0;
     height: 0;
 }
+#help {
+    background-color: #ddeeff;
+    border: 1px solid #aabbcc;
+    border-radius: 0.25em;
+    position: fixed;
+    bottom: 1em;
+    opacity: 0;
+    right: 0.5em;
+    width: 66%;
+
+    transition-property: opacity;
+    transition-duration: 0.5s;
+}
+.help-text {
+    margin: 1em;
+}
