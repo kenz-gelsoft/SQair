@@ -144,8 +144,8 @@ function loadImage(aFile, aCallback) {
 }
 
 function resizeImage(aImage, aCallback) {
-    var x = 0;
-    var y = 0;
+    var x = -IMAGE_SIZE / 2;
+    var y = -IMAGE_SIZE / 2;
     var w = aImage.naturalWidth;
     var h = aImage.naturalHeight;
     if (w > h) {
@@ -153,18 +153,19 @@ function resizeImage(aImage, aCallback) {
         var ratio = IMAGE_SIZE / h;
         w *= ratio;
         h = IMAGE_SIZE;
-        x = (IMAGE_SIZE - w) / 2;
+        x -= (w - IMAGE_SIZE) / 2;
     } else {
         // width を基準に計算する
         var ratio = IMAGE_SIZE / w;
         w = IMAGE_SIZE;
         h *= ratio;
-        y = (IMAGE_SIZE - h) / 2;
+        y -= (h - IMAGE_SIZE) / 2;
     }
     var canvas = document.createElement('canvas');
     canvas.width  = IMAGE_SIZE;
     canvas.height = IMAGE_SIZE;
     var g = canvas.getContext('2d');
+    g.translate(IMAGE_SIZE / 2, IMAGE_SIZE / 2);
     g.drawImage(aImage, x, y, w, h);
 
     canvasToBlob(canvas, aCallback, 'image/jpeg');
