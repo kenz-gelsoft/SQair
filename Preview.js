@@ -5,6 +5,7 @@ Preview.prototype = {
     set: function (aFile) {
         this._objUrl = URL.createObjectURL(aFile);
         this._elt.style.backgroundImage = 'url(' + this._objUrl + ')';
+        this._elt.style.color = 'transparent';
 
         this.rotateByExif(aFile);
     },
@@ -13,6 +14,7 @@ Preview.prototype = {
             return;
         }
         this._elt.style.backgroundImage = null;
+        this._elt.style.color = null;
         this._elt.style.transform = null;
         URL.revokeObjectURL(this._objUrl);
     },
@@ -21,7 +23,6 @@ Preview.prototype = {
         EXIF.getData(aFile, function () {
             that.orientation = EXIF.getTag(this, 'Orientation');
             that._elt.style.transform = 'rotate(' + that.rotation() + 'deg)';
-            that._elt.style.color = 'transparent';
         });
     },
     rotation: function () {
