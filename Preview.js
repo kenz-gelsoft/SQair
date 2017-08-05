@@ -20,17 +20,17 @@ Preview.prototype = {
         var that = this;
         EXIF.getData(aFile, function () {
             that.orientation = EXIF.getTag(this, 'Orientation');
-            that._elt.style.transform = that.rotation();
+            that._elt.style.transform = 'rotate(' + that.rotation() + 'deg)';
             that._elt.style.color = 'transparent';
         });
     },
     rotation: function () {
         switch (this.orientation) {
-        case 3:     return 'rotate(180deg)';
-        case 6:     return 'rotate(90deg)';
-        case 8:     return 'rotate(270deg)';
+        case 3:     return 180;
+        case 6:     return 90;
+        case 8:     return 270;
         case 1:
-        default:    return null;
+        default:    return 0;
         }
     },
 };

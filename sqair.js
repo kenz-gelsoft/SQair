@@ -1,3 +1,4 @@
+var preview;
 window.addEventListener('load', function (e) {
     // var animate = document.getElementById('animate');
     // animate.addEventListener('click', function () {
@@ -8,7 +9,7 @@ window.addEventListener('load', function (e) {
     // }, false);
 
     var chooser = document.getElementById('chooser');
-    var preview = new Preview('preview');
+    preview = new Preview('preview');
     chooser.addEventListener('change', function (e) {
         preview.set(chooser.files[0]);
     }, false);
@@ -125,6 +126,7 @@ function resizeIfTooLarge(aFile, aCallback) {
     loadImage(aFile, function (aImage) {
         var w = aImage.naturalWidth;
         var h = aImage.naturalHeight;
+        // TODO: 画像回転が必要な時はサイズに関わらず実行する
         // if (w <= IMAGE_SIZE ||
         //     h <= IMAGE_SIZE) {
         //     // 十分小さければ縮小しない
@@ -166,6 +168,7 @@ function resizeImage(aImage, aCallback) {
     canvas.height = IMAGE_SIZE;
     var g = canvas.getContext('2d');
     g.translate(IMAGE_SIZE / 2, IMAGE_SIZE / 2);
+    g.rotate(preview.rotation() * Math.PI / 180);
     g.drawImage(aImage, x, y, w, h);
 
     canvasToBlob(canvas, aCallback, 'image/jpeg');
