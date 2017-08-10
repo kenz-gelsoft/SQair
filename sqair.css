@@ -1,5 +1,30 @@
+html {
+    font-family: sans-serif;
+}
+h1 {
+    font-family: "Avenir Next", "Trebuchet MS", serif;
+    font-size: 5em;
+    font-weight: 100;
+    line-height: 1.2em;
+    margin: 0;
+}
+#submit, #preview {
+    font-size: 1.2em;
+}
 #submit, #animate {
     float: right;
+}
+#film-container,
+#sq {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
 }
 #film, #film-back {
     position: relative;
@@ -27,8 +52,10 @@
 }
 #film-back {
     transition-duration: 1s;
+    transition-property: top, left;
     width: 24mm;
     height: 29mm;
+    z-index: -3;
 }
 #preview {
     display: flex;
@@ -62,4 +89,12 @@
 }
 .help-text {
     margin: 1em;
+}
+#sq {
+    z-index: -2;
+}
+#sq img {
+    margin: 0 auto;
+    width: 43mm;
+    height: 43mm;
 }
