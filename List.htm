@@ -11,18 +11,23 @@
         <script type="text/javascript" src="sqair.js"></script>
     </head>
     <body>
+        <div id="sq">
+            <img src="sq.jpg" />
+        </div>
+        <div id="hidden">
+            <div id="film-back"></div>
+        </div>
         <form id="app">
             <input type="submit" id="submit" />
             <!-- <input type="button" id="animate" value="Animate" /> -->
             <h1>SQair</h1>
-            <label for="chooser" id="film">
-                <div id="preview">画像を選択</div>
-            </label>
+            <div id="film-container">
+                <label for="chooser" id="film">
+                    <div id="preview">画像を選択</div>
+                </label>
+            </div>
             <input type="file" id="chooser" accept="image/**"/>
         </form>
-        <div id="hidden">
-            <div id="film-back"></div>
-        </div>
         <div id="help">
             <div class="help-text">送った写真はチェキの電源を入れなおすと使えます。</div>
         </div>
