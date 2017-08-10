@@ -1,6 +1,18 @@
+html {
+    font-family: sans-serif;
+}
+h1 {
+    font-family: "Avenir Next", "Trebuchet MS", serif;
+    font-size: 5em;
+    font-weight: 100;
+    line-height: 1.2em;
+    margin: 0;
+}
+#submit, #preview {
+    font-size: 1.2em;
+}
 #submit, #animate {
     float: right;
-    font-size: 1.2em;
 }
 #film-container,
 #sq {
